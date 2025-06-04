@@ -20,4 +20,4 @@ class Solicitud(Base):
     aprobado_por = Column(String(150), nullable=True)
     prioridad = Column(String, default="Baja")
 
-
+    procesos = relationship("Proceso", back_populates="solicitud")

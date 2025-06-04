@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import solicitud
+from app.routers import solicitud, proceso
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
@@ -18,6 +18,7 @@ app.add_middleware(
 
 # Incluir los routers
 app.include_router(solicitud.router)
+app.include_router(proceso.router)
 
 # Ruta de prueba
 @app.get("/")

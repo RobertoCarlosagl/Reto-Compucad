@@ -77,4 +77,23 @@ def verificar_solicitudes_pendientes(db: Session):
     db.commit()
     return actualizadas
 
+def finalizar_solicitud(db: Session, solicitud_id: UUID):
+    solicitud = db.query(Solicitud).filter(Solicitud.id == solicitud_id).first()
+    if not solicitud:
+        raise HTTPException(status_code=404, detail="Solicitud no encontrada")
+    if not solicitud.aprobado_por:
+        raise HTTPException(status_code=400, detail="No se puede finalizar una solicitud no aprobada")
+    solicitud.estatus = "Finalizada"
+    db.commit()
+    db.refresh(solicitud)
+    return solicitud
 
+from datetime import datetime, timedelta
+from sqlalchemy.orm import Session
+
+def actualizar_solicitudes_pendientes(db: Session):
+    solicitudes = db.query(Solicitud).filter(Solicitud.estatus == "Pendiente").all()
+    for solicitud in solicitudes:
+        if datetime.utcnow() - solicitud.fecha_creacion > timedelta(days=3):
+            solicitud.estatus = "Pendiente Evaluación"
+    db.commit()
