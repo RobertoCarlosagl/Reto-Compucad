@@ -1,83 +1,48 @@
 from sqlalchemy.orm import Session
+from uuid import UUID
+from datetime import datetime, timedelta
 from app.models.solicitud import Solicitud
 from app.schemas.solicitud import SolicitudCreate
-import uuid
-from datetime import datetime
+from fastapi import HTTPException
 from app.utils.folio import generar_folio
 
+# ----- ANALIZAR PALABRAS CLAVE PARA CLASIFICACIÓN -----
+
+def asignar_prioridad(descripcion: str) -> str:
+    descripcion = descripcion.lower()
+    if "urgente" in descripcion or "auditoría" in descripcion:
+        return "Alta"
+    elif "cumplimiento" in descripcion or "normatividad" in descripcion:
+        return "Media"
+    else:
+        return "Baja"
+
+# ----- CRUD SOLICITUDES -----
+
 def crear_solicitud(db: Session, datos: SolicitudCreate):
-    ultima = db.query(Solicitud).order_by(Solicitud.fecha_creacion.desc()).first()
-
-    if ultima and ultima.folio.startswith("CCADPRC-"):
-        ultimo_numero = int(ultima.folio.split("-")[-1])
-    else:
-        ultimo_numero = 0
-
-    nuevo_folio = generar_folio(ultimo_numero)
-
-    # 🧠 Clasificación automática de prioridad
-    descripcion = datos.descripcion.lower()
-    if any(palabra in descripcion for palabra in ["urgente", "emergencia", "inmediato"]):
-        prioridad = "Alta"
-    elif any(palabra in descripcion for palabra in ["cumplimiento", "auditoría", "auditoria"]):
-        prioridad = "Media"
-    else:
-        prioridad = "Baja"
+    prioridad = asignar_prioridad(datos.descripcion)
+    folio = generar_folio(db)
 
     nueva = Solicitud(
-        id=uuid.uuid4(),
+        descripcion=datos.descripcion,
         tipo_area=datos.tipo_area,
         responsable=datos.responsable,
         fecha_estimacion=datos.fecha_estimacion,
-        estatus=datos.estatus,
-        folio=nuevo_folio,
-        retroalimentacion=datos.retroalimentacion,
-        aprobado_por=datos.aprobado_por,
-        fecha_aprobacion=datos.fecha_aprobacion,
-        fecha_creacion=datos.fecha_creacion,
-        prioridad=prioridad,  # ✅ Aquí insertamos el resultado
+        folio=folio,
+        prioridad=prioridad
     )
     db.add(nueva)
     db.commit()
     db.refresh(nueva)
     return nueva
 
+def obtener_solicitudes(db: Session):
+    return db.query(Solicitud).all()
 
-from fastapi import HTTPException
+def obtener_solicitud_por_id(db: Session, solicitud_id: UUID):
+    return db.query(Solicitud).filter(Solicitud.id == solicitud_id).first()
 
-def finalizar_solicitud(db: Session, id: str):
-    solicitud = db.query(Solicitud).filter(Solicitud.id == id).first()
-
-    if not solicitud:
-        raise HTTPException(status_code=404, detail="Solicitud no encontrada")
-
-    if not solicitud.aprobado_por or not solicitud.fecha_aprobacion:
-        raise HTTPException(
-            status_code=400,
-            detail="No se puede finalizar. La solicitud no ha sido aprobada formalmente."
-        )
-
-    solicitud.estatus = "Finalizada"
-    db.commit()
-    db.refresh(solicitud)
-    return solicitud
-
-from datetime import datetime, timedelta, timezone
-
-def verificar_solicitudes_pendientes(db: Session):
-    hoy = datetime.now(timezone.utc)
-    solicitudes = db.query(Solicitud).filter(Solicitud.estatus == "Pendiente").all()
-
-    actualizadas = []
-    for s in solicitudes:
-        if s.fecha_creacion and (hoy - s.fecha_creacion).days > 3:
-            s.estatus = "Pendiente Evaluación"
-            actualizadas.append(s.folio)
-
-    db.commit()
-    return actualizadas
-
-def finalizar_solicitud(db: Session, solicitud_id: UUID):
+def finalizar_solicitud(db: Session, solicitud_id: str):
     solicitud = db.query(Solicitud).filter(Solicitud.id == solicitud_id).first()
     if not solicitud:
         raise HTTPException(status_code=404, detail="Solicitud no encontrada")
@@ -88,12 +53,12 @@ def finalizar_solicitud(db: Session, solicitud_id: UUID):
     db.refresh(solicitud)
     return solicitud
 
-from datetime import datetime, timedelta
-from sqlalchemy.orm import Session
-
-def actualizar_solicitudes_pendientes(db: Session):
+def verificar_solicitudes_pendientes(db: Session):
     solicitudes = db.query(Solicitud).filter(Solicitud.estatus == "Pendiente").all()
+    actualizados = []
     for solicitud in solicitudes:
         if datetime.utcnow() - solicitud.fecha_creacion > timedelta(days=3):
             solicitud.estatus = "Pendiente Evaluación"
+            actualizados.append(solicitud.folio)
     db.commit()
+    return actualizados
