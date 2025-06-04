@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "../../src/styles/login.css"; // importa tu estilo CSS puro
 
 const usuarios = [
   { correo: "Abraham.pardo@compucad.com.mx", password: "retocumplido25" },
@@ -37,43 +36,33 @@ function Login() {
   };
 
   return (
-    <div className="container">
-      {/* Lado izquierdo */}
-      <div className="left">
-        <img src="/img/login.png" alt="Fondo login" className="logo" />
-        <button className="btn-modal">Quiénes Somos</button>
-        <button className="btn-modal">Ayuda</button>
-        <div className="contact-info">
-          <p>Correo: abraham.pardo@compucad.com.mx</p>
-          <p>LinkedIn: Abraham Pardo</p>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="bg-white p-8 rounded-md shadow-md w-full max-w-sm">
+        <p className="text-center text-lg text-gray-700 mb-6">{getSaludo()}</p>
 
-      {/* Lado derecho */}
-      <div className="right">
-        <div className="login-box">
-          <h2>LOGIN</h2>
-          <h4>{getSaludo()}</h4>
-          {error && <p className="alert error">{error}</p>}
-          <form onSubmit={(e) => e.preventDefault()}>
-            <input
-              type="email"
-              placeholder="Correo electrónico"
-              value={correo}
-              onChange={(e) => setCorreo(e.target.value)}
-              required
-            />
-            <input
-              type="password"
-              placeholder="Contraseña"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <button type="submit" onClick={login}>
-              Iniciar sesión
-            </button>
-          </form>
+        {error && <p className="text-red-600 mb-4 text-center">{error}</p>}
+
+        <input
+          type="email"
+          placeholder="Correo electrónico"
+          value={correo}
+          onChange={(e) => setCorreo(e.target.value)}
+          className="w-full p-2 mb-4 border border-gray-300 rounded"
+        />
+        <input
+          type="password"
+          placeholder="Contraseña"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full p-2 mb-4 border border-gray-300 rounded"
+        />
+        <div className="flex justify-center">
+          <button
+            onClick={login}
+            className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition"
+          >
+            Iniciar sesión
+          </button>
         </div>
       </div>
     </div>

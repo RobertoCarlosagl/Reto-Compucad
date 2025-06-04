@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import SolicitudCard from "./components/SolicitudCard";
-import fondo from "./assets/fondo.png";
 
 function App() {
   const [solicitudes, setSolicitudes] = useState([]);
@@ -43,11 +42,8 @@ function App() {
   };
 
   return (
-    <div
-      className="min-h-screen bg-cover bg-center p-8"
-      style={{ backgroundImage: `url(${fondo})` }}
-    >
-      <div className="bg-white bg-opacity-80 p-6 rounded shadow-lg max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gray-100 p-8">
+      <div className="bg-white p-6 rounded shadow-lg max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Gestor de Solicitudes</h1>
           <button
@@ -67,7 +63,7 @@ function App() {
             value={form.descripcion}
             onChange={handleChange}
             placeholder="Descripción"
-            className="p-2 rounded bg-white border"
+            className="p-2 rounded border"
             required
           />
           <input
@@ -75,7 +71,7 @@ function App() {
             value={form.tipo_area}
             onChange={handleChange}
             placeholder="Área"
-            className="p-2 rounded bg-white border"
+            className="p-2 rounded border"
             required
           />
           <input
@@ -83,7 +79,7 @@ function App() {
             value={form.responsable}
             onChange={handleChange}
             placeholder="Responsable"
-            className="p-2 rounded bg-white border"
+            className="p-2 rounded border"
             required
           />
           <input
@@ -91,7 +87,7 @@ function App() {
             type="date"
             value={form.fecha_estimacion}
             onChange={handleChange}
-            className="p-2 rounded bg-white border"
+            className="p-2 rounded border"
           />
           <button
             type="submit"
